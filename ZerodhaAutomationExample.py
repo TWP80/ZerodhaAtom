@@ -26,21 +26,27 @@ z = ZerodhaConnect(driver =  driver, **user_credential)
 
 #Callback method will be called at fixed interval and will give the tick data of active watchlist
 def on_ticks(ticks,time_stemp):
-    print('Time Stamp:',time_stemp)
+    #print('Time Stamp:',time_stemp)
     print(ticks)
     
     '''
-    Example of placing order
+    #Example of placing order:-
     
     z.place_order(symbol='YESBANK',exchange='NSE',
                   product=ZC.PRODUCT_TYPE_CNC,
                   transaction_type = ZC.TRANSACTION_TYPE_BUY,
                   order_type=ZC.ORDER_TYPE_MARKET, qtn=100)
+    
+    #Example for getting Margin detail:
+    margins = z.get_margins()
     '''
 z.on_ticks = on_ticks 
 
 # Sucbscribe tick data from watchlist marker    
-z.subscribe(wlist_index = 1,time_interval = 1,mode = ZC.MODE_LTP)
+z.subscribe(wlist_index = 1,time_interval = 1,mode = ZC.MODE_DEPTH_5)
 
+#Start Thread to collect the data form Zerodha Web Page
 z.start()
+
+#Join Main Thread
 z.join()

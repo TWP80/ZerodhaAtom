@@ -85,6 +85,7 @@ class ZerodhaConnect(threading.Thread):
             
         ''' Left Container elements '''
         time.sleep(5)
+        
         self.el_left_container = self.driver.find_element_by_class_name('container-left')
         self.el_watchlist_selector = self.el_left_container.find_element_by_class_name('marketwatch-selector')
         self.wachlists = self.el_watchlist_selector.find_elements_by_tag_name('li')
@@ -251,6 +252,22 @@ class ZerodhaConnect(threading.Thread):
             ticks.append(tickdata)
         return ticks
         
+    def get_margins(self):
+        self.driver.find_element_by_partial_link_text('Funds').click()
+        container =  self.driver.find_element_by_class_name('container-right')
+        html_src = container.get_attribute('innerHTML')
+        soup =  BeautifulSoup(html_src,'lxml')
+        rows = soup.find_all('div', class_='six columns')
+        
+        margins = {}
+        for row in rows:
+            data = margins[next(row.h3.stripped_strings)] = {}
+            table = row.find('table', class_="table")
+            items = table.find_all('tr')
+            for item in items:
+                tds = item.find_all('td')
+                data[tds[0].text.strip()] =tds[1].text.strip()
+        return margins
             
     @staticmethod
     def get_table_in_pd(pd_table,el_table):
