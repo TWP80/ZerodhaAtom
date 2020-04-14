@@ -10,7 +10,22 @@ from ZerodhaAtom import ZC, ZerodhaConnect
 import time
 import json
 
-driver = webdriver.Chrome()
+chrome_options = None
+headless =  False
+if headless:
+    chrome_options = webdriver.ChromeOptions()
+    chrome_options.add_argument("--window-size=1920,1080")
+    chrome_options.add_argument("--disable-extensions")
+    chrome_options.add_argument("--proxy-server='direct://'")
+    chrome_options.add_argument("--proxy-bypass-list=*")
+    chrome_options.add_argument("--start-maximized")
+    chrome_options.add_argument('--headless')
+    chrome_options.add_argument('--disable-gpu')
+    chrome_options.add_argument('--disable-dev-shm-usage')
+    chrome_options.add_argument('--no-sandbox')
+    chrome_options.add_argument('--ignore-certificate-errors')
+
+driver = webdriver.Chrome(chrome_options=chrome_options)
 
 '''
 Put the credential in following format in credential_file
@@ -27,7 +42,7 @@ z = ZerodhaConnect(driver =  driver, **user_credential)
 #Callback method will be called at fixed interval and will give the tick data of active watchlist
 def on_ticks(ticks,time_stemp):
     #print('Time Stamp:',time_stemp)
-    print(ticks)
+    #print(ticks)
     
     '''
     #Example of placing order:-
@@ -39,11 +54,17 @@ def on_ticks(ticks,time_stemp):
     
     #Example for getting Margin detail:
     margins = z.get_margins()
+    print(margins)
+    
+    #Example for getting Margin detail:
+    holdings = z.get_holdings()
+    print(holdings)
     '''
 z.on_ticks = on_ticks 
 
 # Sucbscribe tick data from watchlist marker    
-z.subscribe(wlist_index = 1,time_interval = 1,mode = ZC.MODE_DEPTH_5)
+z.subscribe(wlist_index = 1,time_interval = 1,mode = ZC.MODE_LTP)
+
 
 #Start Thread to collect the data form Zerodha Web Page
 z.start()

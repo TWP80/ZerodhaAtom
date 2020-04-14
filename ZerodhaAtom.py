@@ -254,6 +254,7 @@ class ZerodhaConnect(threading.Thread):
         
     def get_margins(self):
         self.driver.find_element_by_partial_link_text('Funds').click()
+        time.sleep(0.1)
         container =  self.driver.find_element_by_class_name('container-right')
         html_src = container.get_attribute('innerHTML')
         soup =  BeautifulSoup(html_src,'lxml')
@@ -268,6 +269,32 @@ class ZerodhaConnect(threading.Thread):
                 tds = item.find_all('td')
                 data[tds[0].text.strip()] =tds[1].text.strip()
         return margins
+    
+    def get_holdings(self):
+        self.driver.find_element_by_partial_link_text('Holdings').click()
+        time.sleep(0.1)
+        container =  self.driver.find_element_by_class_name('container-right')
+        html_src = container.get_attribute('innerHTML')
+        
+        keys = []
+        Holdings = {}
+        soup =  BeautifulSoup(html_src,'lxml')
+        table = soup.find('table')        
+        heads = table.thead.tr.find_all('th')
+        for item in heads:
+            keys.append(item.text.strip())
+            
+        data_items =table.tbody.find_all('tr')
+            
+        for tds in data_items:
+            values = tds.find_all('td')
+            holding = {}
+            symbol = values[0].text.strip()
+            for i in range(len(values)):
+                holding[keys[i]] =values[i].text.strip()
+                Holdings[symbol] = holding
+                
+        return Holdings 
             
     @staticmethod
     def get_table_in_pd(pd_table,el_table):
