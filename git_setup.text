@@ -1,0 +1,14 @@
+#Generate ssh Key
+ssh-keygen -t rsa -C "your.mail@gmail.com
+
+#Add Key to Key Agent 
+eval $(ssh-agent -s)
+ssh-add ~/.ssh/id_rsa
+
+#Copy key to clipboard for pasting on githum deployed section
+sudo apt-get install xclip
+xclip -sel clip < ~/.ssh/id_rsa.pub
+
+#Confirm SSH key authentication  
+ssh -T git@github.com
+git config --global credential.helper cache
