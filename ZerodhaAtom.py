@@ -60,14 +60,12 @@ class ZC:
     xpath_username = "//*[@id='container']/div/div/div/form/div[2]/input"
     xpath_pswd = "//*[@id='container']/div/div/div/form/div[3]/input"
     xpath_pin = "//*[@id='container']/div/div/div/form/div[2]/div/input"
-        
-    
+           
 class ZerodhaConnect(threading.Thread):
-    def __init__(self,driver = None, usr=None, pswd=None, pin = None):
+    def __init__(self,driver = None, usr=None, pswd=None, pin = None, logger= None):
         # Call the Thread class's init function
         threading.Thread.__init__(self)
-        #Elements References
-        
+            
         self.ticker_element = None
         #Init valriables
         self.driver =  driver
@@ -198,7 +196,7 @@ class ZerodhaConnect(threading.Thread):
             if self.on_ticks:
                 #start_time = int(round(time.time() * 1000))
                 start_time = time.time()
-                timeStemp =dt.datetime.now()
+                timeStamp =dt.datetime.now()
                 
                 src_code = self.el_left_container.get_attribute('innerHTML')
                 soup =  BeautifulSoup(src_code,'lxml')
@@ -212,18 +210,19 @@ class ZerodhaConnect(threading.Thread):
                     self.subscribe(wlist_index= active_list,mode=self.mode,time_interval=self.time_interval)
                     continue
                 #Get Tick Data
-                ticks = self.get_ticks_data(instruments)                       
-                self.on_ticks(ticks, timeStemp)
+                ticks = self.get_ticks_data(instruments,timeStamp)                       
+                self.on_ticks(ticks)
                 escaped_time = time.time() -  start_time
  
                 if escaped_time < self.time_interval:
                     time.sleep(self.time_interval - escaped_time)
                                        
                 
-    def get_ticks_data(self,instruments):
+    def get_ticks_data(self,instruments, timeStamp):
         ticks = []
         for el in instruments:
             tickdata = {}
+            tickdata['timestamp'] = timeStamp
             tickdata['symbol'] = self.get_soup_text(el,'span','nice-name')
             exchange = self.get_soup_text(el,'span','exchange')
             if exchange is None:
@@ -232,7 +231,6 @@ class ZerodhaConnect(threading.Thread):
             tickdata['holdings'] =  self.get_soup_text(el,'span','holding-quantities')
             tickdata['ltp'] =  self.get_soup_text(el,'span','last-price')
             tickdata['change'] =  self.get_soup_text(el,'span','change-percent')
-            tickdata['ltp'] =  self.get_soup_text(el,'span','last-price')
             
             mk_dp = el.find('div', class_='market-depth')
             if mk_dp:

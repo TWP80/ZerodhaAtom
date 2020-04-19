@@ -8,6 +8,7 @@ Created on Sun Apr 12 14:15:45 2020
 from selenium import webdriver
 from ZerodhaAtom import ZC, ZerodhaConnect
 from StockDataLogger import StockLogger
+from MarketSimulator import TickSimulator
 from signal import signal, SIGINT
 from sys import exit
 
@@ -15,6 +16,22 @@ import time
 import json
 import queue
 import datetime as dt
+
+simulator = False #Enable Simulator for backtesting the data
+ 
+if simulator:
+    tick_sim = TickSimulator()
+    tick_sim.subscribe()
+
+    def on_ticks_sim(ticks):
+        print(ticks)
+    
+    tick_sim.on_ticks = on_ticks_sim    
+    tick_sim.start()
+    
+    tick_sim.join()
+    exit(0)
+
 def handler(signal_received, frame):
     # Handle any cleanup here
     z.stop()
@@ -52,16 +69,18 @@ ticks_queue = queue.Queue(1000)
 
 
 z = ZerodhaConnect(driver =  driver, **user_credential)                                   
-hs_logger = StockLogger(ticks_queue=ticks_queue,chunk_size = 30)
+hs_logger = StockLogger(ticks_queue=ticks_queue,chunk_size = 60)
+
+
 #Callback method will be called at fixed interval and will give the tick data of active watchlist
-def on_ticks(ticks,time_stemp):
+def on_ticks(ticks):
     #print('Time Stamp:',time_stemp)
-    #print(ticks)
+    print(ticks)
     print(dt.datetime.now())
-    if not ticks_queue.full():
-        ticks_queue.put(ticks)
-    else:
-       print('Not able to log data')
+    #if not ticks_queue.full():
+        #ticks_queue.put(ticks)
+    #else:
+       #print('Not able to log data')
     
     
     '''
@@ -80,6 +99,7 @@ def on_ticks(ticks,time_stemp):
     holdings = z.get_holdings()
     print(holdings)
     '''
+
 z.on_ticks = on_ticks 
 
 # Sucbscribe tick data from watchlist marker    
@@ -89,7 +109,6 @@ z.subscribe(wlist_index = 1,time_interval = 2,mode = ZC.MODE_DEPTH_5)
 #Start Thread to collect the data form Zerodha Web Page
 z.start()
 hs_logger.start()
-
 
 #Join Main Thread
 z.join()
