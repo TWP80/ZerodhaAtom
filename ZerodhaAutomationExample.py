@@ -7,11 +7,22 @@ Created on Sun Apr 12 14:15:45 2020
 """
 from selenium import webdriver
 from ZerodhaAtom import ZC, ZerodhaConnect
+from StockDataLogger import StockLogger
+from signal import signal, SIGINT
+from sys import exit
+
 import time
 import json
+import queue
+import datetime as dt
+def handler(signal_received, frame):
+    # Handle any cleanup here
+    z.stop()
+    hs_logger.stop()     
+signal(SIGINT, handler)
 
 chrome_options = None
-headless =  False
+headless =  True
 if headless:
     chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument("--window-size=1920,1080")
@@ -36,13 +47,22 @@ Put the credential in following format in credential_file
 credential_file = '/home/harpal/Desktop/credential_file.json'
 with open(credential_file, 'rb') as input:
     user_credential = json.load(input)
+ticks_queue = queue.Queue(1000) 
 
-z = ZerodhaConnect(driver =  driver, **user_credential)                                    
 
+
+z = ZerodhaConnect(driver =  driver, **user_credential)                                   
+hs_logger = StockLogger(ticks_queue=ticks_queue,chunk_size = 30)
 #Callback method will be called at fixed interval and will give the tick data of active watchlist
 def on_ticks(ticks,time_stemp):
     #print('Time Stamp:',time_stemp)
     #print(ticks)
+    print(dt.datetime.now())
+    if not ticks_queue.full():
+        ticks_queue.put(ticks)
+    else:
+       print('Not able to log data')
+    
     
     '''
     #Example of placing order:-
@@ -63,11 +83,14 @@ def on_ticks(ticks,time_stemp):
 z.on_ticks = on_ticks 
 
 # Sucbscribe tick data from watchlist marker    
-z.subscribe(wlist_index = 1,time_interval = 1,mode = ZC.MODE_LTP)
+z.subscribe(wlist_index = 1,time_interval = 2,mode = ZC.MODE_DEPTH_5)
 
 
 #Start Thread to collect the data form Zerodha Web Page
 z.start()
+hs_logger.start()
+
 
 #Join Main Thread
 z.join()
+hs_logger.join()

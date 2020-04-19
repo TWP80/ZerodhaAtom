@@ -95,7 +95,12 @@ class ZerodhaConnect(threading.Thread):
         # Callbacks
         self.on_ticks = None
         self.sleep_time = 1
+        
+        self.stop_flag = False
 
+    def stop(self):
+        self.stop_flag = True
+        
     def wait_for_login(self):
         while True:
             time.sleep(5)
@@ -188,6 +193,8 @@ class ZerodhaConnect(threading.Thread):
     def run(self):
         time.sleep(1)
         while True:
+            if self.stop_flag:
+                break
             if self.on_ticks:
                 #start_time = int(round(time.time() * 1000))
                 start_time = time.time()
