@@ -20,11 +20,12 @@ import datetime as dt
 simulator = False #Enable Simulator for backtesting the data
  
 if simulator:
-    tick_sim = TickSimulator()
+    tick_sim = TickSimulator(time_interval = 1)
     tick_sim.subscribe()
 
     def on_ticks_sim(ticks):
         print(ticks)
+        print(dt.datetime.now())
     
     tick_sim.on_ticks = on_ticks_sim    
     tick_sim.start()
@@ -38,10 +39,10 @@ def handler(signal_received, frame):
     hs_logger.stop()     
 signal(SIGINT, handler)
 
-chrome_options = None
+chrome_options = chrome_options = webdriver.ChromeOptions()
+chrome_options.add_argument("--disable-notifications")
 headless =  True
 if headless:
-    chrome_options = webdriver.ChromeOptions()
     chrome_options.add_argument("--window-size=1920,1080")
     chrome_options.add_argument("--disable-extensions")
     chrome_options.add_argument("--proxy-server='direct://'")
@@ -75,12 +76,12 @@ hs_logger = StockLogger(ticks_queue=ticks_queue,chunk_size = 60)
 #Callback method will be called at fixed interval and will give the tick data of active watchlist
 def on_ticks(ticks):
     #print('Time Stamp:',time_stemp)
-    print(ticks)
+    #print(ticks)
     print(dt.datetime.now())
-    #if not ticks_queue.full():
-        #ticks_queue.put(ticks)
-    #else:
-       #print('Not able to log data')
+    if not ticks_queue.full():
+        ticks_queue.put(ticks)
+    else:
+       print('Not able to log data')
     
     
     '''
@@ -103,7 +104,7 @@ def on_ticks(ticks):
 z.on_ticks = on_ticks 
 
 # Sucbscribe tick data from watchlist marker    
-z.subscribe(wlist_index = 1,time_interval = 2,mode = ZC.MODE_DEPTH_5)
+z.subscribe(wlist_index = 1,time_interval = 1,mode = ZC.MODE_DEPTH_5)
 
 
 #Start Thread to collect the data form Zerodha Web Page
