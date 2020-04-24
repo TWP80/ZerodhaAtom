@@ -251,7 +251,7 @@ class ZerodhaConnect(threading.Thread):
                     offer_table = el.find('table', class_='six columns sell')
                     #offer_pd = pd.DataFrame(columns = ['bid', 'orders', 'qty'])
                     #self.get_table_in_pd(offer_pd,offer_table)
-                    total_offers = self.get_soup_text(bids_table.tfoot,'td','text-right')
+                    total_offers = self.get_soup_text(offer_table.tfoot,'td','text-right')
                     #tickdata['offer_table'] = offer_pd
                     tickdata['total_offers'] = total_offers 
             ticks.append(tickdata)

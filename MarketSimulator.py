@@ -10,6 +10,7 @@ import time
 import threading
 import datetime as dt
 import pandas as pd
+from ZerodhaAtom import ZC
 
 
 class TickGenerator:
@@ -19,6 +20,8 @@ class TickGenerator:
         self.symbol = symbol
         self.start_date = start_date
         self.end_date = end_date
+        
+        
         
     def __iter__(self):
         return next(self)
@@ -34,7 +37,13 @@ class TickGenerator:
                     tick =  chunk.iloc[index].to_dict()
                     tick['symbol'] = self.symbol
                     tick['exchange'] = self.exchange
-                    print(tick)
+                    if 'timestamp' in tick:
+                        tick['timestamp'] = pd.to_datetime(tick['timestamp'])
+                        #tick['timestamp'] = dt.datetime.strptime(tick['timestamp'],"%Y-%m-%d %H:%M:%S.%f")
+                    if 'LTT' in tick:
+                        tick['LTT'] = pd.to_datetime(tick['LTT'])
+                        #tick['LTT'] = dt.datetime.strptime(tick['LTT'],"%Y-%m-%d %H:%M:%S")
+                    
                     index += 1
                     yield tick
         
@@ -50,15 +59,20 @@ class TickSimulator(threading.Thread):
                  time_interval = 0):
            threading.Thread.__init__(self)
            self.tickers =  None
-           self.start_date = dt.datetime.now().date() -dt.timedelta(5)
-           self.end_date = dt.datetime.now().date()
+           self.start_date = dt.datetime.now().date()
+           self.end_date = self.start_date
            self.data_path = data_path
            self.time_interval = time_interval
            self.tick_genrators = []
            
+           self.stop_flag =  False
+           
            # Call banck for tick collection from tick gererator
            self.on_ticks = False
-           
+    
+    def stop(self):
+        self.stop_flag = True      
+        
     def run(self):
         #Get Tick Gererator for all tickers
         if self.on_ticks:
@@ -79,6 +93,8 @@ class TickSimulator(threading.Thread):
                 #Get one tick for each ticker in list
                 ticks = []
                 for tick_gen in self.tick_genrators.copy():
+                    if self.stop_flag:
+                        return
                     tick = next(tick_gen)
                     if not tick:
                         self.tick_genrators.remove(tick_gen) 
@@ -93,17 +109,27 @@ class TickSimulator(threading.Thread):
                 #time.sleep(5)
             
         
-    def subscribe(self, start_date = None, end_date = None, tickers:list= None ):
+    def subscribe(self, start_date = None, end_date = None, tickers:list= None, last_n_days = 0 ):
         self.tickers = tickers
         if start_date:
             self.start_date = start_date
         if end_date:
             self.end_date = end_date
+        if last_n_days > 0:
+            self.start_date = self.start_date -dt.timedelta(last_n_days)
         if not self.tickers:
             self.tickers = set()
             for exchange in ['NSE','BSE']:                           
                 ticker_list = list(ticker for ticker in os.listdir(self.data_path+ '/'+exchange))
                 self.tickers.update(ticker_list)
-       
-            #print(self.tick_genrators)
+    #Dummuy order   
+    def place_order(self,symbol = None,
+                    exchange= None, 
+                    product = ZC.PRODUCT_TYPE_CNC,
+                    transaction_type =ZC.TRANSACTION_TYPE_BUY,
+                    order_type = ZC.ORDER_TYPE_MARKET,
+                    price = None, 
+                    qtn = 1 ):
+        print('Dummy Order Placed:')
+        print(symbol, ':' ,transaction_type, ',  @',str(price), ', qtn :',str(qtn))
                    

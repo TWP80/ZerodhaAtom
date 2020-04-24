@@ -1,3 +1,4 @@
+##############################Configure SSH Key and Deploy PUB Key#########################################
 #Set SSH URL Here
 git remote set-url origin git_url_here
 
@@ -15,3 +16,14 @@ xclip -sel clip < ~/.ssh/id_rsa.pub
 #Confirm SSH key authentication  
 ssh -T git@github.com
 git config --global credential.helper cache
+
+################################ set default editor, Diff tool configuration and use #########################
+#Set VIM as default editor
+git config --global core.editor "vim"
+
+#Configure difftool 
+git config --global diff.tool vimdiff
+
+#Use Git Diff Tool
+git difftool file_name
+
