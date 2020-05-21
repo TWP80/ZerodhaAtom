@@ -241,18 +241,18 @@ class ZerodhaConnect(threading.Thread):
                     
                     #Get Bids Table
                     bids_table = el.find('table', class_='six columns buy')
-                    #bids_pd = pd.DataFrame(columns = ['bid', 'orders', 'qty'])
-                    #self.get_table_in_pd(bids_pd,bids_table)
+                    bids_pd = pd.DataFrame(columns = ['bid', 'orders', 'qty'])
+                    self.get_table_in_pd(bids_pd,bids_table)
                     total_bids = self.get_soup_text(bids_table.tfoot,'td','text-right')
-                    #tickdata['bid_table'] = bids_pd
+                    tickdata['bid_table'] = bids_pd
                     tickdata['total_bids'] = total_bids
                     
                     #Get Offers Table
                     offer_table = el.find('table', class_='six columns sell')
-                    #offer_pd = pd.DataFrame(columns = ['bid', 'orders', 'qty'])
-                    #self.get_table_in_pd(offer_pd,offer_table)
+                    offer_pd = pd.DataFrame(columns = ['bid', 'orders', 'qty'])
+                    self.get_table_in_pd(offer_pd,offer_table)
                     total_offers = self.get_soup_text(offer_table.tfoot,'td','text-right')
-                    #tickdata['offer_table'] = offer_pd
+                    tickdata['offer_table'] = offer_pd
                     tickdata['total_offers'] = total_offers 
             ticks.append(tickdata)
         return ticks

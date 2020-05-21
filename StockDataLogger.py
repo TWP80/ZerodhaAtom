@@ -12,19 +12,30 @@ import datetime
 import queue
 import time
 import pandas as pd
-
 class TickLogger():
     def __init__(self, csv_file_name, tick):
+        #No Need to save following
+        del tick['symbol']
+        del tick['exchange']
+        if 'bid_table' in tick:
+            tick['bid_table'] = str(tick['bid_table'].to_dict())
+        if 'offer_table' in tick:
+            tick['offer_table'] = str(tick['offer_table'].to_dict())
         self.csv_file_name = csv_file_name
         self.pd = pd.DataFrame()
         self.pd = self.pd.append(tick, ignore_index=True)
-        if os.path.exists(csv_file_name):
-            self.pd = self.pd.append(tick, ignore_index=True)
-        else:
+        #If Log file not created then only create log file
+        if not os.path.exists(csv_file_name):
             self.pd.to_csv(self.csv_file_name, index = False) 
-        self.pd = self.pd[0:0]
+            self.pd = self.pd[0:0]
         
     def append(self,tick):
+        del tick['symbol']
+        del tick['exchange']
+        if 'bid_table' in tick:
+            tick['bid_table'] = str(tick['bid_table'].to_dict())
+        if 'offer_table' in tick:
+            tick['offer_table'] = str(tick['offer_table'].to_dict())
         self.pd = self.pd.append(tick, ignore_index=True)
         
     def save(self):
@@ -46,14 +57,30 @@ class StockLogger(threading.Thread):
         self.stop_flag = False
         self.chunk_size = chunk_size
         self.count = 0
+        self.last_ticks={}
+        #self.cur_time = None
         
     
     def __log_into_panda(self,ticks):
         self.count += 1
         #print(self.count)
         for tick in ticks:
+            #if self.cur_time == tick['timestamp']:
+                #continue
+            #self.cur_time = ticks['timestamp']
             symbol = tick['symbol']
             exchange = tick['exchange']
+            
+            # Don't save too much data 
+            #last_tick = self.last_ticks.get(exchange+symbol)
+            #if last_tick:
+                # Don't save more then one tick per secound
+                #if last_tick['timestamp'] == tick['timestamp'] :
+                    #continue
+                # Don't save repeating price tick
+                #if last_tick['ltp'] == tick['ltp'] :
+                    #continue
+            #self.last_ticks[exchange+symbol] = tick
             if self.__logger_dict[exchange].get(symbol,None):
                 self.__logger_dict[exchange][symbol].append(tick)
             else:
@@ -73,11 +100,11 @@ class StockLogger(threading.Thread):
     def stop(self):
         self.stop_flag = True
         
-    def log_ticks(self,ticks:dict):
+    def log_ticks(self,ticks):
         if not self.ticks_queue.full():
             self.ticks_queue.put(ticks)
         else:
-            print('Not able to log data')
+            print('Hs Logger Queue is Full')
         
                 
     def run(self):
